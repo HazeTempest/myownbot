@@ -53,22 +53,9 @@ bot = commands.Bot(command_prefix="!", self_bot=True)
 async def read_sheet(ctx, range):
     try:
         data = get_sheet_data(range)
-        
         # Format the data into a readable string
-        formatted_data = "\n".join([" | ".join(row) for row in data])
-        
-        # Create an embed
-        embed = discord.Embed(
-            title=f"Data from Range `{range}`",
-            description=f"```\n{formatted_data}\n```",
-            color=discord.Color.blue()  # You can change the color
-        )
-
-        # Handle avatar (custom or default)
-        avatar_url = ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url
-        embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=avatar_url)
-
-        await ctx.send(embed=embed)
+        formatted_data = "\n".join([" ".join(row) for row in data])
+        await ctx.send(f"Data from range `{range}`:\n```\n{formatted_data}\n```")
     except Exception as e:
         await ctx.send(f"An error occurred: {e}")
 
