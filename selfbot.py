@@ -10,7 +10,7 @@ TOKEN = os.getenv('TOKENALT')
 PREFIX = os.getenv('PREFIX')
 
 # Create the bot instance with a command prefix
-bot = commands.Bot(command_prefix=PREFIX)
+bot = commands.Bot(command_prefix=PREFIX, self_bot=True,)
 
 # Event: When the bot is ready
 @bot.event
@@ -61,23 +61,6 @@ async def resetping(ctx: commands.Context, *users: str):
     # Send the message with the timestamp and user mentions
     await ctx.send(f"{' '.join(mentions)} Please do your GS runs. Reset <t:{unix_timestamp}:R>")
 
-# Event: When a message is sent
-@bot.event
-async def on_message(message):
-    # Ignore messages from the bot itself
-    if message.author != bot.user:
-        return
-
-    # Respond to "$ping" even if it's in the middle of a sentence
-    if "$ping" in message.content.lower():
-        await message.channel.send("Pong! 🏓")
-
-    # Respond to "$hello"
-    if message.content.lower() == "$hello":
-        await message.channel.send("Hello!")
-
-    # Ensure commands are processed
-    await bot.process_commands(message)
 
 # Run the bot
 bot.run(TOKEN)
