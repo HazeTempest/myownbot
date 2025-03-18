@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 # Load the .env file and get the token from it
 dotenv.load_dotenv()
-TOKEN = os.getenv('TOKEN')
+TOKEN = os.getenv('TOKENALT')
 PREFIX = os.getenv('PREFIX')
 
 # Create the bot instance with a command prefix
@@ -17,17 +17,35 @@ bot = commands.Bot(command_prefix=PREFIX)
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
-# Prefix command: !ping
+# Prefix command: ping
 @bot.command(name="ping", description="Responds with Pong! 🏓")
 async def ping(ctx: commands.Context):
     await ctx.send("Pong! 🏓")
 
-# Prefix command: !gsreminder
-@bot.command(name="gsreminder", description="Reminds specific users to do their GS runs with a timestamp.")
-async def gsreminder(ctx: commands.Context, *, users: str):
-    # Parse the users input into a list of mentions
-    user_list = users.split()  # Split the input by spaces
-    mentions = " ".join([f"<@{user.strip('<>@! ')}>" for user in user_list])  # Convert to mentions
+# Prefix command: resetping
+@bot.command(name="resetping", description="Reminds specific users of daily reset with a timestamp.")
+async def resetping(ctx: commands.Context, *users: str):
+    # Check if no users were provided
+    if not users:
+        await ctx.send("Please mention users to remind!")
+        return
+
+    # List to store valid user mentions
+    mentions = []
+
+    # Loop through each user input
+    for user_input in users:
+        # Check if the input is a mention (e.g., <@123456789012345678>)
+        if user_input.startswith("<@") and user_input.endswith(">"):
+            mentions.append(user_input)  # Directly add the mention
+        else:
+            # Try to find the user by name in the guild
+            user = discord.utils.get(ctx.guild.members, name=user_input)
+            if user:
+                mentions.append(f"<@{user.id}>")  # Convert to mention
+            else:
+                await ctx.send(f"User '{user_input}' not found!")
+                return
 
     # Get today's date at 4 PM
     now = datetime.now()
@@ -41,13 +59,13 @@ async def gsreminder(ctx: commands.Context, *, users: str):
     unix_timestamp = int(today_4pm.timestamp())
 
     # Send the message with the timestamp and user mentions
-    await ctx.send(f"{mentions} Please do your GS runs. Reset <t:{unix_timestamp}:R>")
+    await ctx.send(f"{' '.join(mentions)} Please do your GS runs. Reset <t:{unix_timestamp}:R>")
 
 # Event: When a message is sent
 @bot.event
 async def on_message(message):
     # Ignore messages from the bot itself
-    if message.author == bot.user:
+    if message.author != bot.user:
         return
 
     # Respond to "$ping" even if it's in the middle of a sentence
@@ -58,7 +76,7 @@ async def on_message(message):
     if message.content.lower() == "$hello":
         await message.channel.send("Hello!")
 
-    # Process commands (required for other commands if using commands.Bot)
+    # Ensure commands are processed
     await bot.process_commands(message)
 
 # Run the bot
