@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from datetime import datetime, timedelta
-from utils import console  # Import the entire console module
+from utils import console
 
 class Utility(commands.Cog):
     def __init__(self, bot):
@@ -10,34 +10,39 @@ class Utility(commands.Cog):
     @commands.command(name="help")
     async def help_command(self, ctx):
         help_message = """
-**Available Commands:**
+        **Available Commands:**
 
-- `!readsheet <range>`: Reads data from the specified range in the Google Sheet.
-  Example: `!readsheet A1:B2`
+        - `!readsheet <range>`: Reads data from a range.
+        Example: `!readsheet A1:B2`
 
-- `!writesheet <cell> <value>`: Writes a value to the specified cell in the Google Sheet.
-  Example: `!writesheet A1 Hello`
+        - `!writesheet <cell> <value>`: Writes a value to a cell.
+        Example: `!writesheet A1 Hello`
 
-- `!addscore <player_name> <score>`: Adds a player's name and score to the next empty row in the Google Sheet.
-  Example: `!addscore "Kanzaki Yuto" 100`
+        - `!addscore <player> <score>`: Adds a player's score.
+        Example: `!addscore Haze 100`
 
-- `!ping`: Checks the bot's latency.
-  Example: `!ping`
+        - `!ping`: Checks the bot's latency.
 
-- `!delete <number>`: Deletes the specified number of bot messages.
-  Example: `!delete 5`
+        - `!delete <number>`: Deletes bot messages.
+        Example: `!delete 3`
 
-- `!resetping <time> <@users>`: Sends a reminder to the specified users at the specified time (24-hour format).
-  Example: `!resetping 16 @User1 @User2`
-"""
+        - `!resetping <time> <users>`: Sends a reminder at the specified time.
+        Example: `!resetping 16 @User1 User2`
+
+        - `!error`: Intentionally causes an error for testing.
+
+        - `!shutdown`: Shuts down the bot gracefully.
+        """
         await ctx.send(help_message)
-        console.print_cmd(f"Used command: help")
+        await console.delete_command_message(ctx)  # Delete the command message
+        console.print_cmd("Used command: help")
 
     @commands.command(name="ping")
     async def ping(self, ctx):
         latency = round(self.bot.latency * 1000, 2)
         await ctx.send(f"Pong! Latency is {latency}ms.")
-        console.print_cmd(f"Used command: ping")
+        await console.delete_command_message(ctx)  # Delete the command message
+        console.print_cmd("Used command: ping")
 
     @commands.command(name="delete")
     async def delete_messages(self, ctx, number: int):
@@ -47,6 +52,7 @@ class Utility(commands.Cog):
                 if message.author == self.bot.user:
                     messages.append(message)
             await ctx.channel.delete_messages(messages)
+            await console.delete_command_message(ctx)  # Delete the command message
             console.print_cmd(f"Used command: delete {number}")
         except Exception as e:
             console.print_error(f"delete command failed: {e}")
@@ -77,9 +83,28 @@ class Utility(commands.Cog):
             unix_timestamp = int(today_time.timestamp())
 
             await ctx.send(f"{' '.join(mentions)} Please do your GS runs. Reset <t:{unix_timestamp}:R>")
+            await console.delete_command_message(ctx)  # Delete the command message
             console.print_cmd(f"Used command: resetping {time} {' '.join(users)}")
         except Exception as e:
             console.print_error(f"resetping command failed: {e}")
+
+    @commands.command(name="error")
+    async def error_command(self, ctx):
+        try:
+            # Intentionally cause an error
+            raise ValueError("This is a test error.")
+        except Exception as e:
+            console.print_error(f"error command failed: {e}")
+            await ctx.send(f"An error occurred: {e}")
+            await console.delete_command_message(ctx)
+
+    @commands.command(name="shutdown")
+    async def shutdown_command(self, ctx):
+        """Shut down the bot gracefully."""
+        await ctx.message.delete()  # Instantly delete the command message
+        await ctx.send("Shutting down...", delete_after=0)  # Send and instantly delete the response
+        console.print_info("Shutdown command received.")
+        await self.bot.close()
 
 async def setup(bot):
     await bot.add_cog(Utility(bot))

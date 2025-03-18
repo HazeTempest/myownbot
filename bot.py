@@ -1,32 +1,37 @@
 import os
-import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from utils import console  # Import the entire console module
+from utils import console
 
 # Load environment variables
 load_dotenv()
 
-# Set up the bot (disable the default help command)
-bot = commands.Bot(command_prefix="!", self_bot=True, help_command=None)
+# Set up the bot with dynamic prefix
+bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), self_bot=True, help_command=None)
 
 # Load command modules
 async def load_cogs():
     await bot.load_extension("commands.google_sheets")
-    await bot.load_extension("commands.utility")
+    await bot.load_extension("commands.utility")  # Load utility cog
 
-# Log when the bot is ready
+# Log when the bot connects
 @bot.event
 async def on_ready():
-    console.clear()
-    console.resize(columns=90, rows=25)
-    console.print_info(f"Logged in as {bot.user.name}#{bot.user.discriminator}")
-    console.print_info(f"You can now use commands with !")
+    # Format the "Logged in as" message
+    text = f"Logged in as {bot.user.name}"
+    if str(bot.user.discriminator) != "0":  # Check if discriminator exists and is not "0"
+        text += f"#{bot.user.discriminator}"
+    
+    console.print_info(text)
+    console.print_info(f"You can now use commands with {os.getenv('DISCORD_BOT_PREFIX')}")
 
 # Run the bot
 async def main():
-    await load_cogs()
-    await bot.start(os.getenv('DISCORD_BOT_TOKEN'))
+    try:
+        await load_cogs()
+        await bot.start(os.getenv('DISCORD_BOT_TOKEN'))
+    except Exception as e:
+        console.print_error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     import asyncio

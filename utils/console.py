@@ -1,49 +1,44 @@
-import os
-import sys
-import colorama
-from datetime import datetime
+import asyncio
+import discord
+from colorama import Fore, Style, init
 
 # Initialize colorama
-colorama.init()
+init()
 
-def clear():
-    """Clear the console."""
-    if sys.platform == "win32":
-        os.system("cls")
-    else:
-        os.system("clear")
+# Global variable for auto-delete delay (in seconds)
+AUTO_DELETE_DELAY = 2  # You can change this value
 
-def resize(columns, rows):
-    """Resize the console."""
-    if sys.platform == "win32":
-        os.system(f"mode con cols={columns} lines={rows}")
-    else:
-        os.system(f"echo '\033[8;{rows};{columns}t'")
-
-def get_formatted_time():
-    """Get the current time in a formatted string."""
-    return datetime.now().strftime("%H:%M:%S")
+async def delete_command_message(ctx):
+    """Delete the user's command message after a delay."""
+    await asyncio.sleep(AUTO_DELETE_DELAY)
+    try:
+        await ctx.message.delete()
+    except discord.errors.NotFound:
+        print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Message already deleted: {ctx.message.content}")
+    except Exception as e:
+        print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Failed to delete message: {e}")
 
 def print_color(color, text):
     """Print colored text."""
-    print(color + text + colorama.Style.RESET_ALL)
+    print(color + text + Style.RESET_ALL)
 
 def print_cmd(text):
     """Print a command-related message."""
-    print(f"{colorama.Style.NORMAL}{colorama.Fore.WHITE}[{get_formatted_time()}] {colorama.Fore.LIGHTBLUE_EX}{colorama.Style.BRIGHT}[COMMAND]{colorama.Style.RESET_ALL} {text}")
+    print(f"{Style.NORMAL}{Fore.WHITE}[{get_formatted_time()}] {Fore.LIGHTBLUE_EX}{Style.BRIGHT}[COMMAND]{Style.RESET_ALL} {text}")
 
 def print_info(text):
     """Print an info message."""
-    print(f"{colorama.Style.NORMAL}{colorama.Fore.WHITE}[{get_formatted_time()}] {colorama.Fore.LIGHTGREEN_EX}{colorama.Style.BRIGHT}[INFO]{colorama.Style.RESET_ALL} {text}")
-
-def print_success(text):
-    """Print a success message."""
-    print(f"{colorama.Style.NORMAL}{colorama.Fore.WHITE}[{get_formatted_time()}] {colorama.Fore.LIGHTGREEN_EX}{colorama.Style.BRIGHT}[SUCCESS]{colorama.Style.RESET_ALL} {text}")
+    print(f"{Style.NORMAL}{Fore.WHITE}[{get_formatted_time()}] {Fore.LIGHTGREEN_EX}{Style.BRIGHT}[INFO]{Style.RESET_ALL} {text}")
 
 def print_error(text):
     """Print an error message."""
-    print(f"{colorama.Style.NORMAL}{colorama.Fore.WHITE}[{get_formatted_time()}] {colorama.Fore.LIGHTRED_EX}{colorama.Style.BRIGHT}[ERROR]{colorama.Style.RESET_ALL} {text}")
+    print(f"{Style.NORMAL}{Fore.WHITE}[{get_formatted_time()}] {Fore.LIGHTRED_EX}{Style.BRIGHT}[ERROR]{Style.RESET_ALL} {text}")
 
 def print_warning(text):
     """Print a warning message."""
-    print(f"{colorama.Style.NORMAL}{colorama.Fore.WHITE}[{get_formatted_time()}] {colorama.Fore.LIGHTYELLOW_EX}{colorama.Style.BRIGHT}[WARNING]{colorama.Style.RESET_ALL} {text}")
+    print(f"{Style.NORMAL}{Fore.WHITE}[{get_formatted_time()}] {Fore.LIGHTYELLOW_EX}{Style.BRIGHT}[WARNING]{Style.RESET_ALL} {text}")
+
+def get_formatted_time():
+    """Get the current time in a formatted string."""
+    from datetime import datetime
+    return datetime.now().strftime("%H:%M:%S")
