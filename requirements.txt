@@ -2,3 +2,4 @@ discord.py-self
 gspread
 oauth2client
 python-dotenv
+colorama
