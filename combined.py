@@ -1,4 +1,7 @@
-import os, discord, json, asyncio
+import os
+import discord
+import json
+import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
 from oauth2client.service_account import ServiceAccountCredentials
@@ -171,7 +174,8 @@ class Utility(commands.Cog):
         commands_list = [(f"{self.bot.command_prefix}{cmd.name} {cmd.extras.get('usage', '')}".strip(), cmd.extras.get("description", "No description"), 
                          f"{self.bot.command_prefix}{cmd.extras.get('example', '')}") for cmd in sorted(self.bot.commands, key=lambda c: c.name) 
                          if cmd.cog_name in ["GoogleSheets", "Utility"]]
-        if not commands_list: return
+        if not commands_list:
+            return
         max_cmd, max_desc, max_ex = max(len(c[0]) for c in commands_list), max(len(c[1]) for c in commands_list), max(len(c[2]) for c in commands_list)
         lines = [f"{'Command':<{max_cmd}}  {'Description':<{max_desc}}  {'Example':<{max_ex}}", "-" * (max_cmd + max_desc + max_ex + 4)]
         lines.extend(f"{c[0]:<{max_cmd}}  {c[1]:<{max_desc}}  {c[2]:<{max_ex}}" for c in commands_list)
@@ -237,7 +241,8 @@ class Utility(commands.Cog):
     async def shutdown_command(self, ctx):
         if ctx.author == self.bot.user:
             await ctx.message.delete()
-        await ctx.send("Shutting down...")
+        message = await ctx.send("Shutting down...")
+        await message.delete()
         Console.print_info("Shutdown received.")
         await self.bot.close()
 
