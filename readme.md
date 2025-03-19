@@ -1,4 +1,4 @@
-## Simple Discord Bot for Reminder and GSheet Integration
+## Simple Discord Bot for Reminder and Google Sheet Integration
 
 ### Installation
 > ```bash
