@@ -201,7 +201,7 @@ class Utility(commands.Cog):
         except Exception as e:
             Console.print_error(f"delete failed: {e}")
 
-    @commands.command(name="reminder", extras={"description": "Sends a reminder. Use 'GS' for GS runs reminder.", "usage": "[GS] <time> [user1 ...]", "example": "reminder GS 16 User1 "})
+    @commands.command(name="reminder", extras={"description": "Sends a reminder.", "usage": "[GS] <time> [user1 ...]", "example": "reminder GS 16 User1 "})
     async def reminder(self, ctx, *args: str):
         if len(args) < 2:
             await send_response(ctx, f"Wrong parameters. Usage: `{self.bot.command_prefix}reminder [GS] <time> <user1> [user2 ...]`\nExample: `{self.bot.command_prefix}{self.command.extras['example']}`")
