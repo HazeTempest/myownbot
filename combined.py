@@ -9,14 +9,21 @@ import gspread
 from colorama import Fore, Style, init
 from datetime import datetime, timedelta
 
-# Initialize and load environment variables
-init()
-load_dotenv()
-ALLOWED_USER_IDS = list(map(int, os.getenv('ALLOWED_USER_IDS', '').split(',')))
-ALLOW_SPECIFIC_USERS = True
+selfbot = False # selfbot on = for main acc purposes. selfbot off = if need another acc as sandbag
+
+init()          # Initialize colorama
+load_dotenv()   # Load .env vars
+
+if selfbot:
+    TOKEN = os.getenv('DISCORD_BOT_TOKEN1')
+else:
+    TOKEN = os.getenv('DISCORD_BOT_TOKEN2')
+
+ALLOWED_USER_IDS = list(map(int, os.getenv('ALLOWED_USER_IDS', '').split(',')))        
+ALLOW_SPECIFIC_USERS = not selfbot
 
 # Bot setup
-bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), help_command=None)
+bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), help_command=None, self_bot=selfbot)
 
 # Persistence for auto-delete state
 AUTO_DELETE_ENABLED = True
@@ -258,17 +265,29 @@ class Utility(commands.Cog):
         else:
             await send_response(ctx, f"Invalid state. Usage: `{self.bot.command_prefix}autodel <on/off>`\nExample: `{self.bot.command_prefix}{self.command.extras['example']}`", force_delete=True)
 
-# Bot events and main (unchanged)
+# Bot events and main
 @bot.event
-async def on_connect():
+async def on_ready():
     Console.print_info(f"Logged in as {bot.user.name}")
     Console.print_info(f"Use commands with {bot.command_prefix}")
+    if ALLOW_SPECIFIC_USERS:
+        allowed_users = []
+        for user_id in ALLOWED_USER_IDS:
+            user = bot.get_user(user_id)
+            if user:
+                allowed_users.append(user.name)
+            else:
+                allowed_users.append(f"Unknown User (ID: {user_id})")
+        if allowed_users:
+            Console.print_info("Allowed users: " + ", ".join(allowed_users))
+        else:
+            Console.print_info("No allowed users found or resolved.")
 
 async def main():
     try:
         await bot.add_cog(GoogleSheets(bot))
         await bot.add_cog(Utility(bot))
-        await bot.start(os.getenv('DISCORD_BOT_TOKEN'))
+        await bot.start(TOKEN)
     except Exception as e:
         Console.print_error(f"Error: {e}")
     finally:
