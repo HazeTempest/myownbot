@@ -13,10 +13,14 @@ from datetime import datetime, timedelta
 init()
 load_dotenv()
 ALLOWED_USER_IDS = list(map(int, os.getenv('ALLOWED_USER_IDS', '').split(',')))
-ALLOW_SPECIFIC_USERS = os.getenv('ALLOW_SPECIFIC_USERS', 'True').lower() == 'true'
+ALLOW_SPECIFIC_USERS = True
+
+# Bot setup
+bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), help_command=None)
 
 # Persistence for auto-delete state
 AUTO_DELETE_ENABLED = True
+
 def load_auto_delete_state():
     try:
         with open('auto_delete_state.txt', 'r') as f:
@@ -27,9 +31,6 @@ def save_auto_delete_state(state):
     with open('auto_delete_state.txt', 'w') as f:
         f.write(str(state))
 AUTO_DELETE_ENABLED = load_auto_delete_state()
-
-# Bot setup
-bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), help_command=None)
 
 # Helper function for sending messages
 async def send_response(ctx, content, force_delete=False):
