@@ -6,7 +6,7 @@
 > python3 -m venv .venv
 > source .venv/bin/activate
 > pip install -r requirements.txt
-> python3 combined.py
+> python3 bot.py
 > ```
 > _requires Python 3.10+_
 ### How to Get Values for .env
