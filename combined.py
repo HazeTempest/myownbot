@@ -29,10 +29,11 @@ AUTO_DELETE_ENABLED = load_auto_delete_state()
 bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), help_command=None)
 
 # Helper function for sending messages
-async def send_response(ctx, content):
-    await ctx.send(content, delete_after=5 if AUTO_DELETE_ENABLED else None)
+async def send_response(ctx, content, force_delete=False):
+    delete_after = 5 if force_delete or AUTO_DELETE_ENABLED else None
+    await ctx.send(content, delete_after=delete_after)
 
-# Console utilities
+# Console utilities (unchanged)
 class Console:
     @staticmethod
     async def delete_command_message(ctx):
@@ -51,7 +52,7 @@ class Console:
     @staticmethod
     def print_error(text): print(f"{Fore.WHITE}[{datetime.now().strftime('%H:%M:%S')}] {Fore.LIGHTRED_EX}[ERROR]{Style.RESET_ALL} {text}")
 
-# Google Sheets utilities
+# Google Sheets utilities (unchanged)
 class Sheets:
     _worksheet = None
     @staticmethod
@@ -65,11 +66,11 @@ class Sheets:
             cls._worksheet = cls.authenticate_google_sheets().open_by_key(os.getenv('SPREADSHEET_ID')).worksheet(os.getenv('SHEET_NAME'))
         return cls._worksheet
 
-# User permission check
+# User permission check (unchanged)
 def is_allowed_user(ctx):
     return not ALLOW_SPECIFIC_USERS or ctx.author.id in ALLOWED_USER_IDS or ctx.author.id == bot.user.id
 
-# Global error handler
+# Global error handler (unchanged)
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
@@ -80,7 +81,7 @@ async def on_command_error(ctx, error):
     else:
         Console.print_error(f"Command error: {error}")
 
-# Command hooks
+# Command hooks (unchanged)
 @bot.before_invoke
 async def before_invoke(ctx):
     if ALLOW_SPECIFIC_USERS and ctx.author.id not in ALLOWED_USER_IDS:
@@ -92,7 +93,7 @@ async def after_invoke(ctx):
     Console.print_cmd(f"{ctx.author.name} used {ctx.command.name}")
     await Console.delete_command_message(ctx)
 
-# Google Sheets commands
+# Google Sheets commands (unchanged)
 class GoogleSheets(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -116,7 +117,7 @@ class GoogleSheets(commands.Cog):
         except Exception as e:
             Console.print_error(f"writesheet failed: {e}")
 
-    @commands.command(name="addscore", extras={"description": "Adds players' scores.", "usage": "<player1> <score1> [<player2> <score2> ...]", "example": 'addscore "Haze Clarke" 2000 Haytham 3000'})
+    @commands.command(name="addscore", extras={"description": "Adds players' scores.", "usage": "[<player1> <score1> ...]", "example": 'addscore "Haze Clarke" 2000'})
     async def add_score(self, ctx, *args: str):
         if not args:
             await send_response(ctx, f"Wrong parameters. Usage: `{self.bot.command_prefix}addscore <player1> <score1> [<player2> <score2> ...]`\nExample: `{self.bot.command_prefix}{self.command.extras['example']}`")
@@ -188,28 +189,49 @@ class Utility(commands.Cog):
         except Exception as e:
             Console.print_error(f"delete failed: {e}")
 
-    @commands.command(name="resetping", extras={"description": "Sends a reminder.", "usage": "<time> <user1> [user2 ...]", "example": "resetping 16 @User1 User2"})
-    async def resetping(self, ctx, time: int, *users: str):
-        if not users:
-            await send_response(ctx, f"Wrong parameters. Usage: `{self.bot.command_prefix}resetping <time> <user1> [user2 ...]`\nExample: `{self.bot.command_prefix}{self.command.extras['example']}`")
+    @commands.command(name="reminder", extras={"description": "Sends a reminder. Use 'GS' for GS runs reminder.", "usage": "[GS] <time> [user1 ...]", "example": "reminder GS 16 User1 "})
+    async def reminder(self, ctx, *args: str):
+        if len(args) < 2:
+            await send_response(ctx, f"Wrong parameters. Usage: `{self.bot.command_prefix}reminder [GS] <time> <user1> [user2 ...]`\nExample: `{self.bot.command_prefix}{self.command.extras['example']}`")
             return
+        gs_mode = False
+        if args[0].lower() == "gs":
+            gs_mode = True
+            time_str = args[1]
+            users = args[2:]
+        else:
+            time_str = args[0]
+            users = args[1:]
         try:
-            mentions = []
-            for u in users:
-                if u.startswith("<@") and u.endswith(">"):
-                    mentions.append(u)
-                elif (user := discord.utils.get(ctx.guild.members, name=u)):
-                    mentions.append(f"<@{user.id}>")
-                else:
-                    await send_response(ctx, f"User '{u}' not found!")
-                    return
-            now = datetime.now()
-            reset_time = now.replace(hour=time, minute=0, second=0, microsecond=0)
-            if now > reset_time:
-                reset_time += timedelta(days=1)
-            await send_response(ctx, f"{' '.join(mentions)} Please do your GS runs. Reset <t:{int(reset_time.timestamp())}:R>")
-        except Exception as e:
-            Console.print_error(f"resetping failed: {e}")
+            time = int(time_str)
+            if time < 0 or time > 23:
+                await send_response(ctx, "Time must be between 0 and 23.")
+                return
+        except ValueError:
+            await send_response(ctx, "Time must be an integer.")
+            return
+        if not users:
+            await send_response(ctx, "At least one user must be specified.")
+            return
+        mentions = []
+        for u in users:
+            if u.startswith("<@") and u.endswith(">"):
+                mentions.append(u)
+            elif (user := discord.utils.get(ctx.guild.members, name=u)):
+                mentions.append(f"<@{user.id}>")
+            else:
+                await send_response(ctx, f"User '{u}' not found!")
+                return
+        now = datetime.now()
+        reset_time = now.replace(hour=time, minute=0, second=0, microsecond=0)
+        if now > reset_time:
+            reset_time += timedelta(days=1)
+        timestamp = int(reset_time.timestamp())
+        if gs_mode:
+            message = f"{' '.join(mentions)}\nPlease do your GS runs. Reset <t:{timestamp}:R> or <t:{timestamp}:t> local time"
+        else:
+            message = f"{' '.join(mentions)}\nReminder <t:{timestamp}:R> or <t:{timestamp}:t> local time"
+        await send_response(ctx, message)
 
     @commands.command(name="shutdown", extras={"description": "Shuts down the bot.", "usage": "", "example": "shutdown"})
     async def shutdown_command(self, ctx):
@@ -226,14 +248,15 @@ class Utility(commands.Cog):
         if state in ["on", "off"]:
             AUTO_DELETE_ENABLED = state == "on"
             save_auto_delete_state(AUTO_DELETE_ENABLED)
-            await send_response(ctx, f"Auto-delete is now **{'enabled' if AUTO_DELETE_ENABLED else 'disabled'}**.")
+            await send_response(ctx, f"Auto-delete is now **{'enabled' if AUTO_DELETE_ENABLED else 'disabled'}**.", force_delete=True)
         else:
-            await send_response(ctx, f"Invalid state. Usage: `{self.bot.command_prefix}autodel <on/off>`\nExample: `{self.bot.command_prefix}{self.command.extras['example']}`")
+            await send_response(ctx, f"Invalid state. Usage: `{self.bot.command_prefix}autodel <on/off>`\nExample: `{self.bot.command_prefix}{self.command.extras['example']}`", force_delete=True)
 
-# Bot events and main
+# Bot events and main (unchanged)
 @bot.event
 async def on_connect():
-    Console.print_info(f"Logged in as {bot.user.name}\nUse commands with {bot.command_prefix}")
+    Console.print_info(f"Logged in as {bot.user.name}")
+    Console.print_info(f"Use commands with {bot.command_prefix}")
 
 async def main():
     try:
