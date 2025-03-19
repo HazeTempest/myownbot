@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 credentials.json
 auto_delete_state.txt
+discord-logo.png
