@@ -3,6 +3,8 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from utils import console
 
+# bot.py, commands, utils will be updated at later time (never)
+
 # Load environment variables
 load_dotenv()
 
