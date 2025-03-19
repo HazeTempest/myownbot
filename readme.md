@@ -16,4 +16,4 @@
 - **User IDs**: Enable Developer Mode in Discord, right-click a user, and copy their ID.
 
 > [!WARNING]  
-> Using this bot can and will result in account termination if not used carefully! To avoid termination do not use any commands within big servers especially ones moderated by Discord staff and do not use any of the abuse commands. I would also recommend using this bot on phone verified accounts!
+> Using this bot can and will result in account termination if not used carefully! To avoid termination do not use any commands within big servers especially ones moderated by Discord staff and do not abuse commands. I would also recommend using this bot on phone verified accounts!
