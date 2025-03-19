@@ -9,21 +9,16 @@ import gspread
 from colorama import Fore, Style, init
 from datetime import datetime, timedelta
 
-selfbot = False # selfbot on = for main acc purposes. selfbot off = if need another acc as sandbag
-
 init()          # Initialize colorama
 load_dotenv()   # Load .env vars
 
-if selfbot:
-    TOKEN = os.getenv('DISCORD_BOT_TOKEN1')
-else:
-    TOKEN = os.getenv('DISCORD_BOT_TOKEN2')
+TOKEN = os.getenv('DISCORD_BOT_TOKEN1')
 
 ALLOWED_USER_IDS = list(map(int, os.getenv('ALLOWED_USER_IDS', '').split(',')))        
-ALLOW_SPECIFIC_USERS = not selfbot
+ALLOW_SPECIFIC_USERS = True
 
 # Bot setup
-bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), help_command=None, self_bot=selfbot)
+bot = commands.Bot(command_prefix=os.getenv('DISCORD_BOT_PREFIX'), help_command=None)
 
 # Persistence for auto-delete state
 AUTO_DELETE_ENABLED = True
